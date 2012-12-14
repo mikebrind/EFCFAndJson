@@ -1,0 +1,130 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>TODO Manager</title>
+        <link href="~/Content/site.css" rel="stylesheet" type="text/css" />
+        <link href="~/Content/jquery-ui-1.8.21.custom.css" rel="stylesheet" type="text/css" />
+        <script src="~/Scripts/jquery-1.7.2.min.js" type="text/javascript"></script>
+        <script src="~/Scripts/jquery-ui-1.8.21.custom.min.js" type="text/javascript"></script>
+        <script type="text/javascript">
+            //Controls appearance of new tasks
+            function slide(panel, content){
+                $('#' + panel).slideDown(600, function(){
+                    $('#' + content).animate(
+                        {
+                            opacity: '1'
+                        },  600
+                    );
+                });
+            }
+
+            $(function () {
+                // Prevent browser caching
+                $.ajaxSetup({ cache: false });
+                
+                var taskList = $('#tasks');
+                var select = $('#TaskTypeId');
+
+                //Get all tasks and display them
+                $.getJSON('/JsonService/GetAllTasks', function(tasks) {
+                    $.each(tasks, function(index, task) {
+                        var panel = 'panel' + task.TaskId;
+                        var content = 'content' + task.TaskId;
+                        var html = '<div id=\'' + panel + '\' class=\'panel\'><div id=\'' + content + '\' class=\'content\'>';
+                        html += '<p><strong>' + task.TaskTitle + '</strong></p>';
+                        html += task.Details + '<br />';
+                        html += 'Complete By: ' + task.CompleteBy + '<br />';
+                        html += task.Activity + '</div></div>';
+                        taskList.prepend(html);
+                        slide(panel, content);
+                    });
+                });
+
+                // Populate the dropdwnlist with Task Types
+                $.getJSON('/JsonService/GetAllTaskTypes', function(taskTypes) {
+                    select.empty();
+                    select.append($('<option/>').attr('value', '').text('--Choose Task Type--'))
+                    $.each(taskTypes, function(index, taskType) {
+                        select.append($('<option/>').attr('value', taskType.TaskTypeId).text(taskType.Activity));
+                    });
+                });
+
+                // Set up the date picker
+                $('#CompleteBy').datepicker({ dateFormat: 'yy/mm/dd' })
+
+                // Open the modal form on the button click 
+                $('#add-task').click(function() {
+                    $('#new-task').dialog('open');
+                });
+
+                // Convert the div to a modal dialog form
+                $('#new-task').dialog({
+                    autoOpen: false,
+                    modal: true,
+                    height: 315,
+                    width: 500,
+                    buttons: {
+                        'Add Task': function () {
+                            // Create a new taks object
+                            var task = {
+                                TaskTitle: $('#TaskTitle').val(),
+                                Details: $('#Details').val(),
+                                CompleteBy: $('#CompleteBy').val(),
+                                TaskTypeId: $('#TaskTypeId').val()
+                            };
+                            // Add the new task and display it
+                            $.ajax("JsonService/SaveTask", {
+                                data: JSON.stringify(task),
+                                type: "post",
+                                contentType: "application/json",
+                                success: function(data) {
+                                    var savedTask = JSON.parse(data);
+                                    var panel = 'panel' + savedTask.TaskId;
+                                    var content = 'content' + savedTask.TaskId;
+                                    $('#new-task').dialog('close');
+                                    var html = '<div id=\'' + panel + '\' class=\'panel\'><div id=\'' + content + '\' class=\'content\'>';
+                                    html += '<p><strong>' + savedTask.TaskTitle + '</strong></p>';
+                                    html += savedTask.Details + '<br />';
+                                    html += 'Complete By: ' + savedTask.CompleteBy + '<br />';
+                                    html += savedTask.Activity + '</div></div>';
+                                    taskList.prepend(html);
+                                    slide(panel, content);
+                                    $('#TaskTitle').val('');
+                                    $('#Details').val('');
+                                    $('#CompleteBy').val('');
+                                    $('#TaskTypeId').val('');
+                                }
+                            });
+                        },
+                        Cancel: function() {
+                            $('#new-task').dialog('close');
+                        }
+                    }
+                });
+            });
+        </script>
+    </head>
+    <body>
+        <button id="add-task">Add Task</button>
+        <div id="tasks"></div>
+        <div id="new-task" title="New Task">
+            <div class="editor-row">
+                <span class="editor-label">Title:</span>
+                <span class="editor-field">@Html.TextBox("TaskTitle", null, new {size = 40})</span>
+            </div>
+            <div class="editor-row">
+                <span class="editor-label">Details:</span>
+                <span class="editor-field">@Html.TextArea("Details", new {rows = 6, cols = 50})</span>
+            </div>
+            <div class="editor-row">
+                <span class="editor-label">Complete By:</span>
+                <span class="editor-field">@Html.TextBox("CompleteBy")</span>
+            </div>
+            <div class="editor-row">
+                <span class="editor-label">Task Type:</span>
+                <span class="editor-field">@Html.DropDownList("TaskTypeId", Enumerable.Empty<SelectListItem>())</span>
+            </div>
+        </div>
+    </body>
+</html>

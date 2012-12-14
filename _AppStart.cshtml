@@ -1,0 +1,11 @@
+﻿@using EF = System.Data.Entity;
+@{
+    EF.Database.SetInitializer(new EF.DropCreateDatabaseIfModelChanges<TaskContext>());
+    var db = new TaskContext();
+    db.TaskTypes.Add(new TaskType {Activity = "Email"});
+    db.TaskTypes.Add(new TaskType {Activity = "Meeting"});
+    db.TaskTypes.Add(new TaskType {Activity = "Document"});
+    db.TaskTypes.Add(new TaskType {Activity = "Phone Call"});
+    db.TaskTypes.Add(new TaskType { Activity = "Letter" });
+    db.SaveChanges();
+}

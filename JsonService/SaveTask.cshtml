@@ -1,0 +1,16 @@
+﻿@{
+    var reader = new StreamReader(Request.InputStream);
+    var json = reader.ReadToEnd();
+    var task = Json.Decode<Task>(json);
+    var repository = new TaskRepository();
+    var t = repository.Save(task);
+    var savedTask = new {
+        TaskId = t.TaskId,
+        TaskTitle = t.TaskTitle,
+        Details = t.Details,
+        CompleteBy = t.CompleteBy.ToShortDateString(),
+        IsDone = t.IsDone,
+        Activity = t.TaskType.Activity
+    };
+    Json.Write(savedTask, Response.Output);
+}

@@ -1,0 +1,12 @@
+﻿@{
+    var repository = new TaskRepository();
+    var taskList = repository.GetAllTasks().Select(t => new {
+        TaskId = t.TaskId,
+        TaskTitle = t.TaskTitle,
+        Details = t.Details,
+        CompleteBy = t.CompleteBy.ToShortDateString(),
+        IsDone = t.IsDone,
+        Activity = t.TaskType.Activity
+    });
+    Json.Write(taskList, Response.Output);
+}
